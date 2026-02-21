@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Roboflow Video Demo</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Roboflow Video Segmentation Demo</h1>
+      <form id="uploadForm">
+        <input type="file" id="videoInput" accept="video/*" name="video" required />
+        <label style="margin-left:8px"><input type="checkbox" id="segmentCheckbox" /> Split into 10s segments</label>
+        <button type="submit">Upload & Analyze</button>
+      </form>
+
+      <div id="status"></div>
+
+      <div id="result" style="display:none">
+        <h2>Processed Video(s)</h2>
+        <ul id="videoList"></ul>
+      </div>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>
