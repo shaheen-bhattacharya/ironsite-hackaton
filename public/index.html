@@ -3,25 +3,88 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Roboflow Video Demo</title>
+    <title>Roboflow Video Analysis Dashboard</title>
     <link rel="stylesheet" href="/style.css">
   </head>
   <body>
-    <div class="container">
-      <h1>Roboflow Video Segmentation Demo</h1>
-      <form id="uploadForm">
-        <input type="file" id="videoInput" accept="video/*" name="video" required />
-        <label style="margin-left:8px"><input type="checkbox" id="segmentCheckbox" /> Split into 10s segments</label>
-        <button type="submit">Upload & Analyze</button>
-      </form>
+    <div class="dashboard">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <h1>🎬 Video Analysis Dashboard</h1>
+          <p>Powered by Roboflow Computer Vision</p>
+        </div>
+      </header>
 
-      <div id="status"></div>
+      <!-- Main Container -->
+      <div class="container">
+        <!-- Sidebar: Object Counts -->
+        <aside class="sidebar">
+          <div class="stats-card">
+            <h2>Object Counts</h2>
+            <div id="countsDisplay" class="counts-grid"></div>
+            <button id="resetCountsBtn" class="btn-secondary">Reset Counts</button>
+          </div>
+        </aside>
 
-      <div id="result" style="display:none">
-        <h2>Processed Video(s)</h2>
-        <ul id="videoList"></ul>
+        <!-- Main Content -->
+        <main class="main-content">
+          <!-- Upload Section -->
+          <section class="upload-section">
+            <div class="card">
+              <h2>Upload & Analyze Video</h2>
+              <form id="uploadForm" class="upload-form">
+                <div class="upload-input-wrapper">
+                  <input type="file" id="videoInput" accept="video/*" name="video" required />
+                  <span class="upload-label">Choose video file</span>
+                </div>
+
+                <label class="checkbox-label">
+                  <input type="checkbox" id="segmentCheckbox" />
+                  <span>Split into 10s segments</span>
+                </label>
+
+                <div style="display: flex; gap: 12px;">
+                  <button type="submit" class="btn-primary" style="flex:1;">
+                    <span>📤 Upload & Analyze</span>
+                  </button>
+                  <button type="button" id="demoBtn" class="btn-primary" style="flex:1; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <span>🎬 Load Demo Video</span>
+                  </button>
+                </div>
+              </form>
+
+              <div id="status" class="status-message"></div>
+            </div>
+          </section>
+
+          <!-- Results Section -->
+          <section id="result" class="result-section" style="display:none;">
+            <div class="videos-grid">
+              <!-- Input Video Preview -->
+              <div class="card">
+                <h3>📹 Uploaded Video</h3>
+                <video id="inputVideo" controls style="width:100%; border-radius:8px; background:#000; max-width:100%;"></video>
+              </div>
+
+              <!-- Output Videos -->
+              <div class="card">
+                <h2>✅ Processed Videos</h2>
+                <div class="videos-container">
+                  <ul id="videoList" class="video-list"></ul>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
       </div>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <p>© 2026 Roboflow Computer Vision. All rights reserved.</p>
+      </footer>
     </div>
+
     <script src="/app.js"></script>
   </body>
 </html>

@@ -6,6 +6,7 @@ const fetch = require('node-fetch');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegStatic = require('ffmpeg-static');
 const cors = require('cors');
+const objectTracker = require('./objectTracker');
 
 ffmpeg.setFfmpegPath(ffmpegStatic.path || ffmpegStatic);
 
@@ -19,11 +20,21 @@ const ROBOFLOW_WORKFLOW = process.env.ROBOFLOW_WORKFLOW || 'find-hands-floors-sh
 
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '.'))); // Serve demo video from root
 app.use('/outputs', express.static(path.join(__dirname, 'outputs')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/api/counts', (req, res) => {
+  res.json(objectTracker.getCounts());
+});
+
+app.post('/api/reset-counts', (req, res) => {
+  objectTracker.resetCounts();
+  res.json({ success: true, counts: objectTracker.getCounts() });
 });
 
 app.post('/analyze-video', upload.single('video'), async (req, res) => {
@@ -43,7 +54,7 @@ app.post('/analyze-video', upload.single('video'), async (req, res) => {
   const shouldSegment = req.body && (req.body.segment === 'true' || req.body.segment === 'on' || req.body.segment === '1');
 
   // helper to call Roboflow on frames in a folder and assemble into a video
-  async function processFramesToVideo(framesDir, processedDir, outVideoPath) {
+  async function processFramesToVideo(framesDir, processedDir, outVideoPath, trackObjects = false) {
     fs.mkdirSync(processedDir, { recursive: true });
     const files = fs.readdirSync(framesDir).filter(f => f.endsWith('.jpg')).sort();
 
@@ -74,6 +85,12 @@ app.post('/analyze-video', upload.single('video'), async (req, res) => {
         }
 
         const json = await response.json();
+        
+        // Track objects if enabled
+        if (trackObjects && json.outputs && json.outputs[0] && json.outputs[0].predictions) {
+          objectTracker.processFrame(i, json.outputs[0].predictions);
+        }
+
         const vis = json.outputs && json.outputs[0] && json.outputs[0].visualization && json.outputs[0].visualization.value;
         if (vis) {
           const visBuffer = Buffer.from(vis, 'base64');
@@ -135,14 +152,17 @@ app.post('/analyze-video', upload.single('video'), async (req, res) => {
                 .run();
             });
 
-            await processFramesToVideo(framesDir, processedDir, outVideoPath);
+            await processFramesToVideo(framesDir, processedDir, outVideoPath, true);
             urls.push(`/outputs/${path.basename(outVideoPath)}`);
           }
 
           // optional cleanup: remove original uploaded file
           try { fs.unlinkSync(videoPath); } catch (e) {}
 
-          res.json({ videoUrls: urls });
+          // Finalize any remaining tracked objects
+          objectTracker.finalizeVideo();
+          const counts = objectTracker.getCounts();
+          res.json({ videoUrls: urls, objectCounts: counts });
         } catch (err) {
           console.error(err);
           res.status(500).json({ error: 'Segment processing error' });
@@ -170,9 +190,12 @@ app.post('/analyze-video', upload.single('video'), async (req, res) => {
     .output(path.join(framesDir, 'frame-%04d.jpg'))
     .on('end', async () => {
       try {
-        await processFramesToVideo(framesDir, processedDir, outVideoPath);
+        await processFramesToVideo(framesDir, processedDir, outVideoPath, true);
         try { fs.unlinkSync(videoPath); } catch (e) {}
-        res.json({ videoUrls: [`/outputs/${path.basename(outVideoPath)}`] });
+        // Finalize any remaining tracked objects
+        objectTracker.finalizeVideo();
+        const counts = objectTracker.getCounts();
+        res.json({ videoUrls: [`/outputs/${path.basename(outVideoPath)}`], objectCounts: counts });
       } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Processing error' });
