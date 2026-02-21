@@ -13,7 +13,7 @@ const app = express();
 const upload = multer({ dest: path.join(__dirname, 'uploads') });
 
 const PORT = process.env.PORT || 3000;
-const ROBOFLOW_API_KEY = process.env.ROBOFLOW_API_KEY;
+const ROBOFLOW_API_KEY = "mYDYI00P8jvoXJiaIrEy";
 const ROBOFLOW_WORKSPACE = process.env.ROBOFLOW_WORKSPACE || 'doorknobyolo';
 const ROBOFLOW_WORKFLOW = process.env.ROBOFLOW_WORKFLOW || 'find-hands-floors-shoes-buckets-and-bottles';
 
